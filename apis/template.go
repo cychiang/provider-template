@@ -20,8 +20,9 @@ package apis
 import (
 	"k8s.io/apimachinery/pkg/runtime"
 
-	samplev1alpha1 "github.com/crossplane/provider-template/apis/sample/v1alpha1"
-	templatev1alpha1 "github.com/crossplane/provider-template/apis/v1alpha1"
+	certificatev1alpha1 "github.com/cychiang/provider-template/apis/certificate/v1alpha1"
+	samplev1alpha1 "github.com/cychiang/provider-template/apis/sample/v1alpha1"
+	templatev1alpha1 "github.com/cychiang/provider-template/apis/v1alpha1"
 )
 
 func init() {
@@ -29,6 +30,7 @@ func init() {
 	AddToSchemes = append(AddToSchemes,
 		templatev1alpha1.SchemeBuilder.AddToScheme,
 		samplev1alpha1.SchemeBuilder.AddToScheme,
+		certificatev1alpha1.SchemeBuilder.AddToScheme,
 	)
 }
 
