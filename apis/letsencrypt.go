@@ -21,15 +21,13 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 
 	certificatev1alpha1 "github.com/cychiang/provider-template/apis/certificate/v1alpha1"
-	samplev1alpha1 "github.com/cychiang/provider-template/apis/sample/v1alpha1"
-	templatev1alpha1 "github.com/cychiang/provider-template/apis/v1alpha1"
+	letsencryptv1alpha1 "github.com/cychiang/provider-template/apis/v1alpha1"
 )
 
 func init() {
 	// Register the types with the Scheme so the components can map objects to GroupVersionKinds and back
 	AddToSchemes = append(AddToSchemes,
-		templatev1alpha1.SchemeBuilder.AddToScheme,
-		samplev1alpha1.SchemeBuilder.AddToScheme,
+		letsencryptv1alpha1.SchemeBuilder.AddToScheme,
 		certificatev1alpha1.SchemeBuilder.AddToScheme,
 	)
 }
