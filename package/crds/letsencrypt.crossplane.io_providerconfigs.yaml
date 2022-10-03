@@ -96,8 +96,27 @@ spec:
                 required:
                 - source
                 type: object
+              lego_config:
+                description: LegoConfig required to get certificates from Let's Encrypt
+                properties:
+                  cloud_provider:
+                    type: string
+                  credentials:
+                    description: CloudCredentials required to authenticate the CloudProvider
+                    type: object
+                  domain_name:
+                    type: string
+                  email:
+                    type: string
+                required:
+                - cloud_provider
+                - credentials
+                - domain_name
+                - email
+                type: object
             required:
             - credentials
+            - lego_config
             type: object
           status:
             description: A ProviderConfigStatus reflects the observed state of a ProviderConfig.

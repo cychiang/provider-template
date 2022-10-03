@@ -20,6 +20,7 @@ package apis
 import (
 	"k8s.io/apimachinery/pkg/runtime"
 
+	awsv1alpha1 "github.com/cychiang/provider-template/apis/aws/v1alpha1"
 	certificatev1alpha1 "github.com/cychiang/provider-template/apis/certificate/v1alpha1"
 	letsencryptv1alpha1 "github.com/cychiang/provider-template/apis/v1alpha1"
 )
@@ -29,6 +30,7 @@ func init() {
 	AddToSchemes = append(AddToSchemes,
 		letsencryptv1alpha1.SchemeBuilder.AddToScheme,
 		certificatev1alpha1.SchemeBuilder.AddToScheme,
+		awsv1alpha1.SchemeBuilder.AddToScheme,
 	)
 }
 

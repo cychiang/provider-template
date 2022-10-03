@@ -30,8 +30,20 @@ type ProviderConfigSpec struct {
 	// Credentials required to authenticate to this provider.
 	Credentials ProviderCredentials `json:"credentials"`
 
-	// Email required to request certificates from Let's Encrypt
-	Email string `json:"email"`
+	// LegoConfig required to get certificates from Let's Encrypt
+	LegoConfig ProviderLegoConfig `json:"lego_config"`
+}
+
+// ProviderLegoConfig required to obtain a certificate from Let's Encrypt
+type ProviderLegoConfig struct {
+	DomainName    string           `json:"domain_name"`
+	Email         string           `json:"email"`
+	CloudProvider string           `json:"cloud_provider"`
+	Credentials   CloudCredentials `json:"credentials"`
+}
+
+// CloudCredentials required to authenticate the CloudProvider
+type CloudCredentials struct {
 }
 
 // ProviderCredentials required to authenticate.

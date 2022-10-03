@@ -5,7 +5,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
-	"fmt"
 	"github.com/crossplane/crossplane-runtime/pkg/connection"
 	"github.com/crossplane/crossplane-runtime/pkg/controller"
 	"github.com/crossplane/crossplane-runtime/pkg/event"
@@ -27,10 +26,10 @@ import (
 )
 
 const (
-	errNotMyType    = "managed resource is not a MyType custom resource"
-	errTrackPCUsage = "cannot track ProviderConfig usage"
-	errGetPC        = "cannot get ProviderConfig"
-	errGetCreds     = "cannot get credentials"
+	errNotCertificate = "managed resource is not a Certificate custom resource"
+	errTrackPCUsage   = "cannot track ProviderConfig usage"
+	errGetPC          = "cannot get ProviderConfig"
+	errGetCreds       = "cannot get credentials"
 
 	errNewClient = "cannot create new Service"
 )
@@ -84,7 +83,7 @@ func Setup(mgr ctrl.Manager, o controller.Options) error {
 func (c *connector) Connect(ctx context.Context, mg resource.Managed) (managed.ExternalClient, error) {
 	cr, ok := mg.(*v1alpha1.Certificate)
 	if !ok {
-		return nil, errors.New(errNotMyType)
+		return nil, errors.New(errNotCertificate)
 	}
 
 	if err := c.usage.Track(ctx, mg); err != nil {
@@ -121,13 +120,10 @@ type external struct {
 }
 
 func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.ExternalObservation, error) {
-	cr, ok := mg.(*v1alpha1.Certificate)
+	_, ok := mg.(*v1alpha1.Certificate)
 	if !ok {
-		return managed.ExternalObservation{}, errors.New(errNotMyType)
+		return managed.ExternalObservation{}, errors.New(errNotCertificate)
 	}
-
-	// These fmt statements should be removed in the real implementation.
-	fmt.Printf("Observing: %+v", cr)
 
 	return managed.ExternalObservation{
 		// Return false when the external resource does not exist. This lets
@@ -149,10 +145,8 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 func (c *external) Create(ctx context.Context, mg resource.Managed) (managed.ExternalCreation, error) {
 	cr, ok := mg.(*v1alpha1.Certificate)
 	if !ok {
-		return managed.ExternalCreation{}, errors.New(errNotMyType)
+		return managed.ExternalCreation{}, errors.New(errNotCertificate)
 	}
-
-	fmt.Printf("Creating: %+v", cr)
 
 	pc := &apisv1alpha1.ProviderConfig{}
 	if err := c.kube.Get(ctx, types.NamespacedName{Name: cr.GetProviderConfigReference().Name}, pc); err != nil {
@@ -165,11 +159,11 @@ func (c *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 	if err != nil {
 		return managed.ExternalCreation{
 			ConnectionDetails: managed.ConnectionDetails{},
-		}, errors.New(errNotMyType)
+		}, errors.New(errNotCertificate)
 	}
 
 	c.config = lego.NewConfig(&LegoUser{
-		Email: pc.Spec.Email,
+		Email: pc.Spec.LegoConfig.Email,
 		key:   privateKey,
 	})
 	c.config.Certificate.KeyType = certcrypto.RSA2048
@@ -182,12 +176,10 @@ func (c *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 }
 
 func (c *external) Update(ctx context.Context, mg resource.Managed) (managed.ExternalUpdate, error) {
-	cr, ok := mg.(*v1alpha1.Certificate)
+	_, ok := mg.(*v1alpha1.Certificate)
 	if !ok {
-		return managed.ExternalUpdate{}, errors.New(errNotMyType)
+		return managed.ExternalUpdate{}, errors.New(errNotCertificate)
 	}
-
-	fmt.Printf("Updating: %+v", cr)
 
 	return managed.ExternalUpdate{
 		// Optionally return any details that may be required to connect to the
@@ -197,12 +189,10 @@ func (c *external) Update(ctx context.Context, mg resource.Managed) (managed.Ext
 }
 
 func (c *external) Delete(ctx context.Context, mg resource.Managed) error {
-	cr, ok := mg.(*v1alpha1.Certificate)
+	_, ok := mg.(*v1alpha1.Certificate)
 	if !ok {
-		return errors.New(errNotMyType)
+		return errors.New(errNotCertificate)
 	}
-
-	fmt.Printf("Deleting: %+v", cr)
 
 	return nil
 }
