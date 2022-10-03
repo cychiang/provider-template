@@ -29,6 +29,9 @@ import (
 type ProviderConfigSpec struct {
 	// Credentials required to authenticate to this provider.
 	Credentials ProviderCredentials `json:"credentials"`
+
+	// Email required to request certificates from Let's Encrypt
+	Email string `json:"email"`
 }
 
 // ProviderCredentials required to authenticate.

@@ -2,6 +2,9 @@ package certificate
 
 import (
 	"context"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
 	"fmt"
 	"github.com/crossplane/crossplane-runtime/pkg/connection"
 	"github.com/crossplane/crossplane-runtime/pkg/controller"
@@ -9,7 +12,11 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/ratelimiter"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
+	"github.com/go-acme/lego/v4/certcrypto"
+	"github.com/go-acme/lego/v4/lego"
 	"github.com/pkg/errors"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -100,7 +107,7 @@ func (c *connector) Connect(ctx context.Context, mg resource.Managed) (managed.E
 		return nil, errors.Wrap(err, errNewClient)
 	}
 
-	return &external{service: svc}, nil
+	return &external{kube: c.kube, service: svc}, nil
 }
 
 // An ExternalClient observes, then either creates, updates, or deletes an
@@ -108,6 +115,8 @@ func (c *connector) Connect(ctx context.Context, mg resource.Managed) (managed.E
 type external struct {
 	// A 'client' used to connect to the external resource API. In practice this
 	// would be something like an AWS SDK client.
+	config  *lego.Config
+	kube    client.Client
 	service interface{}
 }
 
@@ -145,6 +154,26 @@ func (c *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 
 	fmt.Printf("Creating: %+v", cr)
 
+	pc := &apisv1alpha1.ProviderConfig{}
+	if err := c.kube.Get(ctx, types.NamespacedName{Name: cr.GetProviderConfigReference().Name}, pc); err != nil {
+		return managed.ExternalCreation{
+			ConnectionDetails: managed.ConnectionDetails{},
+		}, errors.Wrap(err, errGetPC)
+	}
+
+	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		return managed.ExternalCreation{
+			ConnectionDetails: managed.ConnectionDetails{},
+		}, errors.New(errNotMyType)
+	}
+
+	c.config = lego.NewConfig(&LegoUser{
+		Email: pc.Spec.Email,
+		key:   privateKey,
+	})
+	c.config.Certificate.KeyType = certcrypto.RSA2048
+
 	return managed.ExternalCreation{
 		// Optionally return any details that may be required to connect to the
 		// external resource. These will be stored as the connection secret.
@@ -176,4 +205,17 @@ func (c *external) Delete(ctx context.Context, mg resource.Managed) error {
 	fmt.Printf("Deleting: %+v", cr)
 
 	return nil
+}
+
+func (c *external) saveKeySecret(ctx context.Context, mg resource.Managed) error {
+	patcher := resource.NewAPIPatchingApplicator(c.kube)
+	sc := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      mg.GetName(),
+			Namespace: mg.GetNamespace(),
+		},
+		Data: map[string][]byte{},
+	}
+
+	return patcher.Apply(ctx, sc)
 }
