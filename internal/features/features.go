@@ -29,4 +29,10 @@ const (
 	// Management Policies. See the below design for more details.
 	// https://github.com/crossplane/crossplane/blob/master/design/design-doc-observe-only-resources.md
 	EnableAlphaManagementPolicies feature.Flag = "EnableAlphaManagementPolicies"
+
+	// EnableAlphaLegacyClusterScoped enables support for legacy v1alpha1
+	// cluster-scoped resources alongside the default v2alpha1 namespaced resources.
+	// When disabled (default), only v2alpha1 namespaced resources are available.
+	// When enabled, both v1alpha1 cluster-scoped and v2alpha1 namespaced resources are available.
+	EnableAlphaLegacyClusterScoped feature.Flag = "EnableAlphaLegacyClusterScoped"
 )

@@ -22,18 +22,29 @@ import (
 
 	"github.com/crossplane/provider-template/internal/controller/config"
 	"github.com/crossplane/provider-template/internal/controller/mytype"
+	"github.com/crossplane/provider-template/internal/controller/mytype_v1"
+	"github.com/crossplane/provider-template/internal/features"
 )
 
 // Setup creates all Template controllers with the supplied logger and adds them to
 // the supplied manager.
 func Setup(mgr ctrl.Manager, o controller.Options) error {
-	for _, setup := range []func(ctrl.Manager, controller.Options) error{
-		config.Setup,
-		mytype.Setup,
-	} {
-		if err := setup(mgr, o); err != nil {
+	// Always register the provider config controller
+	if err := config.Setup(mgr, o); err != nil {
+		return err
+	}
+
+	// Always register v2alpha1 namespaced controllers (default behavior)
+	if err := mytype.Setup(mgr, o); err != nil {
+		return err
+	}
+
+	// Conditionally register v1alpha1 cluster-scoped controllers (legacy support)
+	if o.Features.Enabled(features.EnableAlphaLegacyClusterScoped) {
+		if err := mytype_v1.Setup(mgr, o); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }

@@ -67,6 +67,7 @@ func main() {
 		namespace                  = app.Flag("namespace", "Namespace used to set as default scope in default secret store config.").Default("crossplane-system").Envar("POD_NAMESPACE").String()
 		enableExternalSecretStores = app.Flag("enable-external-secret-stores", "Enable support for ExternalSecretStores.").Default("false").Envar("ENABLE_EXTERNAL_SECRET_STORES").Bool()
 		enableManagementPolicies   = app.Flag("enable-management-policies", "Enable support for Management Policies.").Default("false").Envar("ENABLE_MANAGEMENT_POLICIES").Bool()
+		enableLegacyClusterScoped  = app.Flag("enable-legacy-cluster-scoped", "Enable support for legacy v1alpha1 cluster-scoped resources alongside v2alpha1 namespaced resources.").Default("false").Envar("ENABLE_LEGACY_CLUSTER_SCOPED").Bool()
 		enableChangeLogs           = app.Flag("enable-changelogs", "Enable support for capturing change logs during reconciliation.").Default("false").Envar("ENABLE_CHANGE_LOGS").Bool()
 		changelogsSocketPath       = app.Flag("changelogs-socket-path", "Path for changelogs socket (if enabled)").Default("/var/run/changelogs/changelogs.sock").Envar("CHANGELOGS_SOCKET_PATH").String()
 	)
@@ -152,6 +153,11 @@ func main() {
 	if *enableManagementPolicies {
 		o.Features.Enable(features.EnableAlphaManagementPolicies)
 		log.Info("Alpha feature enabled", "flag", features.EnableAlphaManagementPolicies)
+	}
+
+	if *enableLegacyClusterScoped {
+		o.Features.Enable(features.EnableAlphaLegacyClusterScoped)
+		log.Info("Alpha feature enabled", "flag", features.EnableAlphaLegacyClusterScoped)
 	}
 
 	if *enableChangeLogs {
